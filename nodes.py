@@ -2,7 +2,7 @@
 
 The stock MiniMaxH3ImageConditioning node scales every reference picture to a
 1024 px short edge (text encoder) and a 1024-2048 px short edge (VAE). This node
-keeps that behavior for image_1 (the picture to edit) and scales the other
+keeps that behavior for the first picture (the one to edit) and scales the other
 references to a fixed long edge (512 px by default) for both consumers.
 """
 
@@ -47,19 +47,19 @@ class H3ImageSmallPropConditioning(io.ComfyNode):
             node_id="H3ImageSmallPropConditioning",
             display_name="H3 Image Conditioning (small refs)",
             category="model/conditioning/minimax",
-            description="MiniMax H3 Image Conditioning that keeps image_1 at the stock size and scales the other references to a smaller long edge.",
+            description="MiniMax H3 Image Conditioning that keeps the first picture at the stock size and scales the other references to a smaller long edge.",
             inputs=[
                 io.Clip.Input("clip"),
                 io.Vae.Input("vae", optional=True),
                 io.String.Input("prompt", multiline=True, dynamic_prompts=True),
                 io.Int.Input("width", default=0, min=0, max=16384, step=CANVAS_MULTIPLE,
-                             tooltip="0 uses the width of image_1 after its reference scaling, or 2048 without images."),
+                             tooltip="0 uses the width of the first picture after its reference scaling, or 2048 without images."),
                 io.Int.Input("height", default=0, min=0, max=16384, step=CANVAS_MULTIPLE,
-                             tooltip="0 uses the height of image_1 after its reference scaling, or 2048 without images."),
+                             tooltip="0 uses the height of the first picture after its reference scaling, or 2048 without images."),
                 io.Int.Input("ref_long_edge", default=512, min=CANVAS_MULTIPLE, max=2048, step=CANVAS_MULTIPLE, optional=True,
-                             tooltip="Long edge for image_2 and later, for both the text encoder and the VAE."),
+                             tooltip="Long edge for the second and later pictures, for both the text encoder and the VAE."),
                 io.Autogrow.Input("images", optional=True, template=io.Autogrow.TemplatePrefix(
-                    input=io.Image.Input("image", tooltip="Reference picture, <Picture n> in the prompt; image_1 is the picture to edit."),
+                    input=io.Image.Input("image", tooltip="Reference picture, <Picture n> in the prompt; the first connected picture is the one to edit."),
                     prefix="image_", min=0, max=100)),
             ],
             outputs=[io.Conditioning.Output(display_name="positive"), io.Latent.Output()],
@@ -67,17 +67,16 @@ class H3ImageSmallPropConditioning(io.ComfyNode):
 
     @classmethod
     def execute(cls, clip, prompt, width, height, vae=None, images=None, ref_long_edge=512) -> io.NodeOutput:
+        # The frontend numbers the slots from image_0, API prompts often from image_1,
+        # so the first connected picture (in slot order) is the one to edit.
         names = sorted(images or {}, key=lambda name: int(name.rsplit("_", 1)[-1]))
+        pictures = [images[name][:1] for name in names if images[name] is not None]
         vision_images = []
         refs = []
         main_vae_size = None
-        for name in names:
-            image = images[name]
-            if image is None:
-                continue
-            image = image[:1]
+        for index, image in enumerate(pictures):
             size = (image.shape[2], image.shape[1])
-            if name == "image_1":
+            if index == 0:
                 vision_size = short_edge_size(*size, MAIN_SHORT_EDGE, MAIN_SHORT_EDGE)
                 vae_size = short_edge_size(*size, MAIN_SHORT_EDGE, MAIN_VAE_MAX_SHORT_EDGE)
                 main_vae_size = vae_size

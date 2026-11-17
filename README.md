@@ -1,14 +1,14 @@
 # ComfyUI-H3Image-SmallRefs
 
-MiniMax-H3-Image の参照画像のうち、**編集対象（image_1）以外の小物画像だけを小さく（既定は長辺512 px）して**処理する ComfyUI 用の非公式カスタムノードです。
+MiniMax-H3-Image の参照画像のうち、**編集対象（1枚目につないだ画像）以外の小物画像だけを小さく（既定は長辺512 px）して**処理する ComfyUI 用の非公式カスタムノードです。
 
-An unofficial ComfyUI node for MiniMax-H3-Image: keeps `image_1` at the stock reference size and scales the other references to a smaller long edge (512 px by default).
+An unofficial ComfyUI node for MiniMax-H3-Image: keeps the first picture at the stock reference size and scales the other references to a smaller long edge (512 px by default).
 
 ## なぜ必要か
 
 標準の `MiniMax H3 Image Conditioning` は、すべての参照画像をテキストエンコーダ用に短辺1024 px、VAE用に短辺1024〜2048 pxへ調整します。小さい画像も1024 pxへ**拡大**されるため、`ImageScaleToMaxDimension` などで先に縮小しても効果がありません。参照サイズを変える入力もありません。
 
-このノードは、image_1 は標準と同じサイズのまま、image_2 以降を `ref_long_edge` の長辺（短辺は元の比率のまま32 px単位）に縮小し、テキストエンコーダとVAEの両方へ渡します。
+このノードは、1枚目（人物など編集対象）は標準と同じサイズのまま、2枚目以降を `ref_long_edge` の長辺（短辺は元の比率のまま32 px単位）に縮小し、テキストエンコーダとVAEの両方へ渡します。
 
 ## 実測（RTX 4070 12GB、H3 Image W4A8、出力2496×1664、6ステップ）
 
@@ -37,14 +37,20 @@ ComfyUI を再起動すると `H3 Image Conditioning (small refs)` が追加さ�
 
 標準の `MiniMax H3 Image Conditioning` と差し替えて使います。入力は標準ノードと同じで、次の1つが増えています。
 
-- `ref_long_edge`（既定512）: image_2 以降の長辺（px）。image_1 には適用されません。
+- `ref_long_edge`（既定512）: 2枚目以降の長辺（px）。1枚目には適用されません。画面では入力欄が image_0 から始まるので、image_0 が1枚目です。
 
-`workflows/example_4refs.api.json` は、上の実測で使った4枚参照の API 形式ワークフローです。画像ファイル（`ref_01.webp` など）は含めていないので、ご自分の画像に差し替えてください。
+ワークフローの例（上の実測で使った4枚参照の条件）:
+
+- `workflows/example_4refs.json`: ComfyUI の画面にドラッグ＆ドロップして使うワークフローです。
+- `workflows/example_4refs.api.json`: API（`/prompt`）から実行する用です。画面に読み込むと画像の接続が外れるので、画面では使わないでください。
+
+画像ファイル（`ref_01.webp` など）は含めていないので、ご自分の画像に差し替えてください。1枚目（`image_0`）に編集する人物、2枚目以降に小物をつなぎます。
 
 ## 動作確認
 
 - ComfyUI 0.45.0
-- ノード内の縮小・エンコード処理は、上の実測に使った検証用ノードと同一の入力テンソルになることをモックで確認しています。
+- `workflows/example_4refs.json` を画面から読み込んで実行し、上の表の4枚の結果と画素まで一致することを確認しています。
+- API 形式（入力名 `image_1` 始まり）と画面（入力名 `image_0` 始まり）のどちらでも、ノード内の縮小・エンコード処理が同じになることをモックで確認しています。
 - 参照の受け渡しは ComfyUI 内部の `minimax_refs` という形式に依存しています。ComfyUI 側の仕様が変わると動かなくなる可能性があります。
 
 ## ライセンス
