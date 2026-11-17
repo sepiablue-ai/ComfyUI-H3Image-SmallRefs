@@ -1,0 +1,138 @@
+{
+  "3": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "minimax_h3_image_pruned_w4a8.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "4": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    }
+  },
+  "5": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "minimax_h3_image_vae_fp16.safetensors"
+    }
+  },
+  "6": {
+    "class_type": "H3ImageSmallPropConditioning",
+    "inputs": {
+      "clip": [
+        "4",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ],
+      "width": 2496,
+      "height": 1664,
+      "prompt": "The woman in <Picture 1> is <Subject 1>. The target image shows <Subject 1> in the same hallway, with her face, hairstyle and standing pose preserved. She carries the bag from <Picture 2> in place of her original bag. She wears the cardigan from <Picture 3> and the boots from <Picture 4>. All three referenced items are visible once and retain their reference appearance.",
+      "images.image_1": [
+        "101",
+        0
+      ],
+      "images.image_2": [
+        "102",
+        0
+      ],
+      "images.image_3": [
+        "103",
+        0
+      ],
+      "images.image_4": [
+        "104",
+        0
+      ]
+    }
+  },
+  "7": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "6",
+        0
+      ]
+    }
+  },
+  "8": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "3",
+        0
+      ],
+      "positive": [
+        "6",
+        0
+      ],
+      "negative": [
+        "7",
+        0
+      ],
+      "latent_image": [
+        "6",
+        1
+      ],
+      "seed": 261113,
+      "steps": 6,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "9": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "8",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    }
+  },
+  "10": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "9",
+        0
+      ],
+      "filename_prefix": "h3image_smallrefs"
+    }
+  },
+  "101": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "ref_01.webp"
+    }
+  },
+  "102": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "ref_02.png"
+    }
+  },
+  "103": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "ref_03.png"
+    }
+  },
+  "104": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "ref_04.png"
+    }
+  }
+}
