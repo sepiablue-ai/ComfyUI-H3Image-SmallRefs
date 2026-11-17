@@ -1,0 +1,16 @@
+[project]
+name = "comfyui-h3image-smallrefs"
+version = "0.1.0"
+description = "MiniMax-H3-Image conditioning for ComfyUI that keeps image_1 at the stock size and scales the other references to a smaller long edge"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/sepiablue-ai/ComfyUI-H3Image-SmallRefs"
+Issues = "https://github.com/sepiablue-ai/ComfyUI-H3Image-SmallRefs/issues"
+
+# Registry publication is optional. No PublisherId is claimed or registered.
+[tool.comfy]
+DisplayName = "H3 Image Small Refs"
